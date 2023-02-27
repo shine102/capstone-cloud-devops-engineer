@@ -38,7 +38,7 @@ workflows:
   default:
     jobs:
       - lint
-      - build-docker
+      - build-docker:
           requires: [lint]
   # deploy-infrastructure:
   #   docker: 
