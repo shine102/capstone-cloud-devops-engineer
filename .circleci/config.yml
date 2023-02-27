@@ -1,5 +1,5 @@
 jobs:
-  build: 
+  lint: 
     docker:
       - image: python:latest
     steps:
@@ -34,13 +34,13 @@ jobs:
             docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
             docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
         
-workflow:
+workflows:
   default:
     jobs:
-      - build
+      - lint
       - build-docker
           requires:
-            - build
+            - lint
   # deploy-infrastructure:
   #   docker: 
   #     - image: amazon/aws-cli:latest
