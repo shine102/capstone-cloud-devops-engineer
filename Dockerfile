@@ -6,9 +6,6 @@ WORKDIR /app
 ## Step 2:
 COPY . main.py /app/
 
-## Step 3:
-RUN make all
-
 ## Step 4:
 EXPOSE 5000
 ## Step 5:
