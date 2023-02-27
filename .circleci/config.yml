@@ -23,8 +23,9 @@ jobs:
             make lint 
   
   workflow:
-    jobs:
-      - lint
+    default:
+      jobs:
+        - lint
   
   # build-docker:
   #   docker:
