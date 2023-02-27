@@ -3,7 +3,7 @@ from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
-def index():
+def hello_world():
     return "<h1>hello, I'm shine102</h1>"
 
 if __name__ == '__main__':
