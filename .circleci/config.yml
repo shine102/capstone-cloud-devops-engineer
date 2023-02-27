@@ -22,6 +22,10 @@ jobs:
             make setup
             make lint 
   
+  workflow:
+    jobs:
+      - lint
+  
   # build-docker:
   #   docker:
   #     - image: docker:latest
