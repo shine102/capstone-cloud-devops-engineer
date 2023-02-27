@@ -39,8 +39,7 @@ workflows:
     jobs:
       - lint
       - build-docker
-          requires:
-            - lint
+          requires: [lint]
   # deploy-infrastructure:
   #   docker: 
   #     - image: amazon/aws-cli:latest
