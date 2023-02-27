@@ -1,5 +1,5 @@
 jobs:
-  lint: 
+  build: 
     docker:
       - image: python:latest
     steps:
@@ -37,8 +37,10 @@ jobs:
 workflow:
   default:
     jobs:
-      - lint
-
+      - build
+      - build-docker
+          requires:
+            - build
   # deploy-infrastructure:
   #   docker: 
   #     - image: amazon/aws-cli:latest
