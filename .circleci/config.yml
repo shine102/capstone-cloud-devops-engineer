@@ -104,7 +104,7 @@ workflows:
       - lint-test
       - build-docker:
           requires: [lint-test]
-      -- aws-eks/create-cluster:
+      - aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
           requires: [build-docker]
       - test-cluster:
