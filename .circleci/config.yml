@@ -4,19 +4,19 @@ orbs:
   aws-eks: circleci/aws-eks@2.2.0
   kubernetes: circleci/kubernetes@1.3
 
-commands:
-  destroy-environment:
-    description: "Destroy the cloudformation stacks with contain vpc, eks cluster given the workflow id"
-  parameters:
-    workflow_id:
-      type: string
-  steps:
-    - run:
-        name: Destroy environments
-        when: on-fail
-        command: |
-          aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-EKS" --region $AWS_REGION
-          aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-VPC" --region $AWS_REGION
+# commands:
+#   destroy-environment:
+#     description: "Destroy the cloudformation stacks with contain vpc, eks cluster given the workflow id"
+#   parameters:
+#     workflow_id:
+#       type: string
+#   steps:
+#     - run:
+#         name: Destroy environments
+#         when: on-fail
+#         command: |
+#           aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-EKS" --region $AWS_REGION
+#           aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-VPC" --region $AWS_REGION
 
 jobs:
   lint-test: 
