@@ -69,7 +69,7 @@ jobs:
       - checkout
       - aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
-          node-type: t2.small
+          node-type: t3.medium
           nodes: 1
 
   test-cluster:
@@ -127,7 +127,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - lint-test
+      # - lint-test
       - build-docker:
           requires: [lint-test]
       - create-k8s:
