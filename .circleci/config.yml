@@ -133,7 +133,7 @@ workflows:
       - create-k8s:
           requires: [build-docker]
       - test-cluster:
-          requires: [aws-eks/create-cluster]
+          requires: [create-k8s]
           cluster-name: "shine102-<< pipeline.id >>-EKS"
           filters:
             branches:
