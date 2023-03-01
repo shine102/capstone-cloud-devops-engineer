@@ -1,24 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask
+  name: demoapp
   labels:
-    app: flask
+    app: demo
 spec:
-  replicas: 3
   selector:
     matchLabels:
-      app: flask
+      app: demo
+  replicas: 2
   template:
     metadata:
       labels:
-        app: flask
+        app: demo
     spec:
-      nodeSelector:
-        "beta.kubernetes.io/os": linux
       containers:
-        - name: nodejs-aks-app
-          image: nodejs-aks-app
-          ports:
-            - name: http
-              containerPort: 1337
+      - name: app
+        image: << pipeline.parameters.dockerhub-username >>/<< pipeline.parameters.dockerhub-repo >>:<< pipeline.parameters.workflow-id >>
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 8080

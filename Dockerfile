@@ -7,6 +7,6 @@ WORKDIR /app
 COPY . main.py /app/
 
 ## Step 4:
-EXPOSE 5000
+EXPOSE 8080
 ## Step 5:
 CMD ["python3", "main.py"]

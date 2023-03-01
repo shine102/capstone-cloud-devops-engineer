@@ -80,7 +80,7 @@ jobs:
             kubectl get services
           name: Test cluster
   
-  deploy-cluster:
+  deploy-application:
     docker:
       - image: 'cimg/python:3.10'
     parameters:
@@ -97,7 +97,23 @@ jobs:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/deployment.yaml
           resource-name: deploy-kubernetes/deployment
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: deploy-kubernetes/service.yaml
+          resource-name: deploy-kubernetes/service
+      - run:
+          name: get services
+          command: |
+            kubectl get services
+            kubectl get pods
+            kubectl get deployments
 
+  # smoke-test:
+  
+  # switch-version:
+
+  # clean-up:
+  
 workflows:
   default:
     jobs:
@@ -107,19 +123,23 @@ workflows:
       - aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
           requires: [build-docker]
+          node-type: t2.medium
       - test-cluster:
           requires: [aws-eks/create-cluster]
           cluster-name: "shine102-<< pipeline.id >>-EKS"
           filters:
             branches:
               only: master
-      # - deploy-cluster:
-      #     requires: [create-cluster]
-      #     cluster-name: "shine102-<< pipeline.id >>-EKS"
-      #     context: "shine102-eks"
-      #     filters:
-      #       branches:
-      #         only: master
-      
-      
+      - deploy-application:
+          requires: [test-cluster]
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          filters:
+            branches:
+              only: master
+      - aws-eks/delete-cluster:
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          requires: [deploy-application]
+          filters:
+            branches:
+              only: master
 
