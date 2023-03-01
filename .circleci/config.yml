@@ -110,7 +110,6 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/service.yaml
-          resource-name: deploy-kubernetes/service
       - run:
           name: get services
           command: |
