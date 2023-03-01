@@ -123,7 +123,8 @@ workflows:
       - aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
           requires: [build-docker]
-          node-type: t2.medium
+          node-type: t2.small
+          node-ami: ami-082b1f4237bd816a1
       - test-cluster:
           requires: [aws-eks/create-cluster]
           cluster-name: "shine102-<< pipeline.id >>-EKS"
