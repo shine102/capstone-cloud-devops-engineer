@@ -62,6 +62,16 @@ jobs:
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
 
+  create-k8s:
+    docker:
+      - image: 'cimg/python:3.10'
+    steps:
+      - checkout
+      - aws-eks/create-cluster:
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          node-type: t2.small
+          nodes: 1
+
   test-cluster:
     docker:
       - image: 'cimg/python:3.10'
@@ -120,10 +130,7 @@ workflows:
       - lint-test
       - build-docker:
           requires: [lint-test]
-      - aws-eks/create-cluster:
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
-          node-type: "t2.small"
-          node-ami: "ami-082b1f4237bd816a1"
+      - create-k8s:
           requires: [build-docker]
       - test-cluster:
           requires: [aws-eks/create-cluster]
@@ -137,10 +144,10 @@ workflows:
           filters:
             branches:
               only: master
-      - aws-eks/delete-cluster:
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
-          requires: [deploy-application]
-          filters:
-            branches:
-              only: master
+      # - aws-eks/delete-cluster:
+      #     cluster-name: "shine102-<< pipeline.id >>-EKS"
+      #     requires: [deploy-application]
+      #     filters:
+      #       branches:
+      #         only: master
 
