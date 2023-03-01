@@ -128,8 +128,8 @@ workflows:
   default:
     jobs:
       # - lint-test
-      - build-docker:
-          requires: [lint-test]
+      - build-docker
+          # requires: [lint-test]
       - create-k8s:
           requires: [build-docker]
       - test-cluster:
