@@ -122,8 +122,8 @@ workflows:
           requires: [lint-test]
       - aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
-          node-type: t2.small
-          node-ami: ami-082b1f4237bd816a1
+          node-type: "t2.small"
+          node-ami: "ami-082b1f4237bd816a1"
           requires: [build-docker]
       - test-cluster:
           requires: [aws-eks/create-cluster]
