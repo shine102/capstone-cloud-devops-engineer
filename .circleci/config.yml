@@ -62,7 +62,7 @@ jobs:
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
 
-  create-cluster:
+  test-cluster:
     docker:
       - image: 'cimg/python:3.10'
     parameters:
@@ -104,10 +104,12 @@ workflows:
       - lint-test
       - build-docker:
           requires: [lint-test]
-      - create-cluster:
-          requires: [build-docker]
+      -- aws-eks/create-cluster:
           cluster-name: "shine102-<< pipeline.id >>-EKS"
-          context: "shine102-eks"
+          requires: [build-docker]
+      - test-cluster:
+          requires: [aws-eks/create-cluster]
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
           filters:
             branches:
               only: master
