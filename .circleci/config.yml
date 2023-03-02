@@ -50,7 +50,8 @@ jobs:
       - run:
           name: debug
           command: |
-            cat deploy-kubernetes/deployment.yaml
+            cat deployment/deployment.yaml| sed "s|DOCKER_IMAGE|<< parameters.docker-image >>| > deployment/deployment.yaml
+            cat deployment/deployment.yaml
 
   create-k8s:
     docker:
@@ -83,7 +84,6 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/service.yaml
-          resource-name: service/demoapp
           show-kubectl-command: true
       - run:
           name: get all
@@ -100,13 +100,15 @@ workflows:
   default:
     jobs:
       # - lint-test
-      - build-docker
+      - build-docker:
+          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
           # requires: [lint-test]
       # - create-k8s:
       #     requires: [build-docker]
       # - deploy-application:
       #     requires: [create-k8s]
       #     cluster-name: "shine102-<< pipeline.id >>-EKS"
+      #     docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
       #     filters:
       #       branches:
       #         only: master
