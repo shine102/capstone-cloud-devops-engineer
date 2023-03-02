@@ -2,21 +2,7 @@ version: 2.1
 
 orbs:
   aws-eks: circleci/aws-eks@2.2.0
-  kubernetes: circleci/kubernetes@1.3
-
-# commands:
-#   destroy-environment:
-#     description: "Destroy the cloudformation stacks with contain vpc, eks cluster given the workflow id"
-#   parameters:
-#     workflow_id:
-#       type: string
-#   steps:
-#     - run:
-#         name: Destroy environments
-#         when: on-fail
-#         command: |
-#           aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-EKS" --region $AWS_REGION
-#           aws cloudformation delete-stack --stack-name "shine102-<< parameters.workflow_id >>-VPC" --region $AWS_REGION
+  kubernetes: circleci/kubernetes@1.3.1
 
 jobs:
   lint-test: 
@@ -106,10 +92,7 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/deployment.yaml
-          resource-name: deploy-kubernetes/deployment
-      - kubernetes/create-or-update-resource:
-          get-rollout-status: true
-          resource-file-path: deploy-kubernetes/service.yaml
+          resource-name: deploy-kubernetes/deployment          
       - run:
           name: get services
           command: |
