@@ -60,7 +60,7 @@ jobs:
       - run:
           name: debug
           command: |
-            cat deploy-kubernetes/deployment.yaml| sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deploy-kubernetes/deployment.yaml
+            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deploy-kubernetes/deployment.yaml
             cat deploy-kubernetes/deployment.yaml
 
   create-k8s:
