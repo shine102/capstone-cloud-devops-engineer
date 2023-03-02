@@ -130,7 +130,5 @@ workflows:
           filters:
             branches:
               only: master
-      - aws-eks/delete-cluster:
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
-          when: onfail
+
 
