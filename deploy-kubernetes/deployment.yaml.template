@@ -17,9 +17,5 @@ spec:
       containers:
       - name: app
         image: DOCKER_IMAGE
-        resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
         ports:
         - containerPort: 8080
