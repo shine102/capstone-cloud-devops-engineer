@@ -37,31 +37,16 @@ jobs:
   build-docker:
     docker:
       - image: circleci/python:latest
-    parameters:
-      docker-image:
-        description: |
-          Docker image to build
-        type: string
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
-          name: install dependencies
+          name: build docker image
           command: |
-            sudo apt-get install -y sed
-
-      # - setup_remote_docker:
-      #     docker_layer_caching: true
-      # - run:
-      #     name: build docker image
-      #     command: |
-      #       docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7} .
-      #       echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-      #       docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
-      - run:
-          name: debug
-          command: |
-            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deploy-kubernetes/deployment.yaml
-            cat deploy-kubernetes/deployment.yaml
+            docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7} .
+            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
 
   create-k8s:
     docker:
@@ -81,8 +66,20 @@ jobs:
         description: |
           Name of the EKS cluster
         type: string
+      docker-image:
+        description: |
+          Docker image to build
+        type: string
     steps:
       - checkout
+      - run:
+          name: install dependencies
+          command: |
+            sudo apt-get install -y sed
+      - run:
+          name: create deployment.yaml
+          command: |
+            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deploy-kubernetes/deployment.yaml
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
@@ -110,17 +107,16 @@ workflows:
   default:
     jobs:
       # - lint-test
-      - build-docker:
-          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
+      - build-docker
           # requires: [lint-test]
-      # - create-k8s:
-      #     requires: [build-docker]
-      # - deploy-application:
-      #     requires: [create-k8s]
-      #     cluster-name: "shine102-<< pipeline.id >>-EKS"
-      #     docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
-      #     filters:
-      #       branches:
-      #         only: master
+      - create-k8s:
+          requires: [build-docker]
+      - deploy-application:
+          requires: [create-k8s]
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
+          filters:
+            branches:
+              only: master
 
 
