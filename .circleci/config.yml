@@ -91,6 +91,7 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/service.yaml
+          resource-name: service/demoapp
           show-kubectl-command: true
       - run:
           name: get all
