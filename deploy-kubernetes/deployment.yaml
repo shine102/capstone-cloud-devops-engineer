@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: << pipeline.parameters.dockerhub-username >>/<< pipeline.parameters.dockerhub-repo >>:<< pipeline.parameters.workflow-id >>
+        image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
         resources:
           requests:
             cpu: 100m
