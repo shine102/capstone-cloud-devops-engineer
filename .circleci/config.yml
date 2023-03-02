@@ -92,19 +92,17 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/deployment.yaml
-          resource-name: deployment/deploy-kubernetes 
+          resource-name: deployment/demoapp
           show-kubectl-command: true
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/service.yaml
-          resource-name: service/deploy-kubernetes 
+          resource-name: service/demoapp
           show-kubectl-command: true
       - run:
-          name: get services
+          name: get all
           command: |
-            kubectl get services
-            kubectl get pods
-            kubectl get deployments
+            kubectl get all
 
   # smoke-test:
   
@@ -132,10 +130,7 @@ workflows:
           filters:
             branches:
               only: master
-      # - aws-eks/delete-cluster:
-      #     cluster-name: "shine102-<< pipeline.id >>-EKS"
-      #     requires: [deploy-application]
-      #     filters:
-      #       branches:
-      #         only: master
+      - aws-eks/delete-cluster:
+          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          when: onfail
 
