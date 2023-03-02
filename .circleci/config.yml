@@ -47,7 +47,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            apt-get install -y sed
+            sudo apt-get install -y sed
 
       # - setup_remote_docker:
       #     docker_layer_caching: true
