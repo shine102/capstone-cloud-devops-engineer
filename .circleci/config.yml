@@ -39,14 +39,18 @@ jobs:
       - image: circleci/python:latest
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      # - setup_remote_docker:
+      #     docker_layer_caching: true
+      # - run:
+      #     name: build docker image
+      #     command: |
+      #       docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7} .
+      #       echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+      #       docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
       - run:
-          name: build docker image
+          name: debug
           command: |
-            docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7} .
-            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
+            cat deploy-kubernetes/deployment.yaml
 
   create-k8s:
     docker:
@@ -98,13 +102,13 @@ workflows:
       # - lint-test
       - build-docker
           # requires: [lint-test]
-      - create-k8s:
-          requires: [build-docker]
-      - deploy-application:
-          requires: [create-k8s]
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
-          filters:
-            branches:
-              only: master
+      # - create-k8s:
+      #     requires: [build-docker]
+      # - deploy-application:
+      #     requires: [create-k8s]
+      #     cluster-name: "shine102-<< pipeline.id >>-EKS"
+      #     filters:
+      #       branches:
+      #         only: master
 
 
