@@ -92,7 +92,13 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deploy-kubernetes/deployment.yaml
-          resource-name: deploy-kubernetes/deployment          
+          resource-name: deployment/deploy-kubernetes 
+          show-kubectl-command: true
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: deploy-kubernetes/service.yaml
+          resource-name: service/deploy-kubernetes 
+          show-kubectl-command: true
       - run:
           name: get services
           command: |
