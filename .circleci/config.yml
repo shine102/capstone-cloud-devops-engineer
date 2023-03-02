@@ -37,8 +37,18 @@ jobs:
   build-docker:
     docker:
       - image: circleci/python:latest
+    parameters:
+      docker-image:
+        description: |
+          Docker image to build
+        type: string
     steps:
       - checkout
+      - install:
+          name: install dependencies
+          command: |
+            apt-get install -y sed
+
       # - setup_remote_docker:
       #     docker_layer_caching: true
       # - run:
@@ -101,7 +111,7 @@ workflows:
     jobs:
       # - lint-test
       - build-docker:
-          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
+          docker-image: "$DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}"
           # requires: [lint-test]
       # - create-k8s:
       #     requires: [build-docker]
