@@ -60,7 +60,7 @@ jobs:
       - run:
           name: debug
           command: |
-            cat deployment/deployment.yaml| sed "s|DOCKER_IMAGE|<< parameters.docker-image >>| > deployment/deployment.yaml
+            cat deployment/deployment.yaml| sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deployment/deployment.yaml
             cat deployment/deployment.yaml
 
   create-k8s:
@@ -111,7 +111,7 @@ workflows:
     jobs:
       # - lint-test
       - build-docker:
-          docker-image: "$DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}"
+          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
           # requires: [lint-test]
       # - create-k8s:
       #     requires: [build-docker]
