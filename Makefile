@@ -8,8 +8,10 @@ install:
 	chmod +x /bin/hadolint
 
 lint:
-	hadolint Dockerfile
-	pylint --disable=R,C,W1203,W1202 main.py
+	hadolint ./ver1/Dockerfile
+	hadolint ./ver2/Dockerfile
+	pylint --disable=R,C,W1203,W1202 ./ver1/main.py
+	pylint --disable=R,C,W1203,W1202 ./ver2/main.py
 
 test:
 	python3 test.py

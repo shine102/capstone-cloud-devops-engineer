@@ -4,6 +4,8 @@ orbs:
   aws-eks: circleci/aws-eks@2.2.0
   kubernetes: circleci/kubernetes@1.3.1
 
+
+
 jobs:
   lint-test: 
     docker:
@@ -42,19 +44,24 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          name: build docker image
+          name: build docker image ver1
           command: |
-            docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7} .
+            docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}_ver1 ./ver1
             echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
             docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
-
+      - run: 
+          name: build docker image ver2
+          command: |
+            docker build -t $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}_ver2 ./ver2
+            echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            docker push $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
   create-k8s:
     docker:
-      - image: 'cimg/python:3.10'
+      - image: 'circleci/python:latest'
     steps:
       - checkout
       - aws-eks/create-cluster:
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
+          cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
           node-type: t3.medium
           nodes: 1
   
@@ -66,7 +73,11 @@ jobs:
         description: |
           Name of the EKS cluster
         type: string
-      docker-image:
+      docker-image-ver1:
+        description: |
+          Docker image to build
+        type: string
+      docker-image-ver2:
         description: |
           Docker image to build
         type: string
@@ -79,41 +90,83 @@ jobs:
       - run:
           name: create deployment.yaml
           command: |
-            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image >>|g" > deploy-kubernetes/deployment.yaml
+            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image-ver1 >>|g" > deploy-kubernetes/deployment-ver1.yaml
+            cat deploy-kubernetes/deployment-v2.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image-ver2 >>|g" > deploy-kubernetes/deployment-ver2.yaml
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
-      - kubernetes/create-or-update-resource:
+      - kubernetes/create-or-update-resource:  
           get-rollout-status: true
-          resource-file-path: deploy-kubernetes/deployment.yaml
+          resource-file-path: deploy-kubernetes/deployment-ver1.yaml
           resource-name: deployment/demoapp
+          show-kubectl-command: true
+      - kubernetes/create-or-update-resource:  
+          get-rollout-status: true
+          resource-file-path: deploy-kubernetes/deployment-ver2.yaml
+          resource-name: deployment/demoapp-v2
           show-kubectl-command: true
       - kubernetes/create-or-update-resource:
           resource-file-path: deploy-kubernetes/service.yaml
           show-kubectl-command: true
       - run:
-          name: get all
+          name: test external ip
           command: |
-            kubectl get all
+            URL=http://${kubectl get svc demoapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'}
+            curl $URL
 
-  # smoke-test:
-  
+
   # switch-version:
+  switch-version:
+    docker:
+      - image: 'cimg/python:3.10'
+    steps:
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
+          install-kubectl: true
+      - kubernetes/create-or-update-resource:
+          resource-file-path: deploy-kubernetes/ingress.yaml
+          show-kubectl-command: true
+      - run:
+          name: test external ip
+          command: |
+            URL=http://${kubectl get svc demoapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'}
+            curl $URL
 
   # clean-up:
-  
+  clean-up: 
+    docker:
+      - image: 'cimg/python:3.10'
+    steps:
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
+          install-kubectl: true
+      - kubernetes/delete-resource:
+          resource-file-path: deploy-kubernetes/deployment-ver1.yaml
+          show-kubectl-command: true
+
 workflows:
   default:
     jobs:
-      # - lint-test
+      - lint-test
       - build-docker
-          # requires: [lint-test]
+          requires: [lint-test]
       - create-k8s:
           requires: [build-docker]
       - deploy-application:
           requires: [create-k8s]
-          cluster-name: "shine102-<< pipeline.id >>-EKS"
-          docker-image: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}
+          cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
+          docker-image-ver1: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}_ver1
+          docker-image-ver2: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}_ver2
+          filters:
+            branches:
+              only: master
+      - switch-version:
+          requires: [deploy-application]
+          filters:
+            branches:
+              only: master
+      - clean-up:
+          requires: [switch-version]
           filters:
             branches:
               only: master
