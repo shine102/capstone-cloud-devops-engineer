@@ -110,12 +110,12 @@ jobs:
       - kubernetes/create-or-update-resource:
           resource-file-path: deploy-kubernetes/service-v2.yaml
           show-kubectl-command: true
-      - run: 
-          name: create policy
-          command: |
-            aws iam create-policy \
-            --policy-name AWSLoadBalancerControllerIAMPolicy \
-            --policy-document file://iam_policy.json
+      # - run: 
+      #     name: create policy
+      #     command: |
+      #       aws iam create-policy \
+      #       --policy-name AWSLoadBalancerControllerIAMPolicy \
+      #       --policy-document file://iam_policy.json
       - run:
           name: create IAM OIDC
           command: |
