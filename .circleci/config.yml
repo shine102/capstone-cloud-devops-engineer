@@ -145,10 +145,10 @@ jobs:
             --assume-role-policy-document file://"load-balancer-role-trust-policy.json"
       - run:
           name: attach IAM policy
-            command: |
-              aws iam attach-role-policy \
-              --policy-arn arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
-              --role-name AmazonEKSLoadBalancerControllerRole
+          command: |
+            aws iam attach-role-policy \
+            --policy-arn arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
+            --role-name AmazonEKSLoadBalancerControllerRole
       - run: 
           name: download helm
           command: |
