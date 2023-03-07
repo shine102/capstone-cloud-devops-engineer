@@ -107,6 +107,15 @@ jobs:
       - kubernetes/create-or-update-resource:
           resource-file-path: deploy-kubernetes/service.yaml
           show-kubectl-command: true
+      - kubernetes/create-or-update-resource:
+          resource-file-path: deploy-kubernetes/service-v2.yaml
+          show-kubectl-command: true
+      - run: 
+          name: create policy
+          command: |
+            aws iam create-policy \
+            --policy-name AWSLoadBalancerControllerIAMPolicy \
+            --policy-document file://iam_policy.json
       - run:
           name: create IAM OIDC
           command: |
@@ -117,26 +126,7 @@ jobs:
           name: create load-balancer-role-trust-policy.json
           command: |
             export oidc_id=$(aws eks describe-cluster --name << parameters.cluster-name >> --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
-            echo 
-            "{
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": {
-                            "Federated": "arn:aws:iam::809868205509:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id"
-                        },
-                        "Action": "sts:AssumeRoleWithWebIdentity",
-                        "Condition": {
-                            "StringEquals": {
-                                "oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:aud": "sts.amazonaws.com",
-                                "oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
-                            }
-                        }
-                    }
-                ]
-            }"
-            > load-balancer-role-trust-policy.json
+            echo "{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::809868205509:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:aud": "sts.amazonaws.com","oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"}}}]}" > load-balancer-role-trust-policy.json
       - run: 
           name: create IAM role 
           command: |
@@ -150,15 +140,25 @@ jobs:
             --policy-arn arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
             --role-name AmazonEKSLoadBalancerControllerRole
       - run: 
+          name: create aws-load-balancer-controller service account
+          command: |
+            kubectl apply -f aws-load-balancer-controller-service-account.yaml
+      - run:
+          name: fix error
+          command: |
+            eksctl delete iamserviceaccount --cluster << parameters.cluster-name >> --name=aws-load-balancer-controller
+            eksctl create iamserviceaccount \
+            --cluster=<< parameters.cluster-name >> \
+            --name=aws-load-balancer-controller \
+            --attach-policy-arn="arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy" \
+            --override-existing-serviceaccounts \
+            --approve
+      - run: 
           name: download helm
           command: |
             curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
             chmod 700 get_helm.sh
             ./get_helm.sh
-      - run: 
-          name: create aws-load-balancer-controller service account
-          command: |
-            kubectl apply -f aws-load-balancer-controller-service-account.yaml
       - run:
           name: install aws-load-balancer-controller
           command: |

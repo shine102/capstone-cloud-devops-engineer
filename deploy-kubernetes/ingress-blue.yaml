@@ -5,7 +5,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/actions.blue-green: |
+    alb.ingress.kubernetes.io/actions.demoapp: |
       {
         "type":"forward",
         "forwardConfig":{
@@ -23,8 +23,6 @@ metadata:
           ]
         }
       }
-  labels:
-    app: demo
 spec:
   rules:
     - http:
@@ -33,6 +31,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: demoapp-service
+                name: demoapp
                 port:
                   name: use-annotation
