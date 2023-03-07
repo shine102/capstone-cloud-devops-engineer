@@ -126,7 +126,7 @@ jobs:
           name: create load-balancer-role-trust-policy.json
           command: |
             export oidc_id=$(aws eks describe-cluster --name << parameters.cluster-name >> --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
-            echo "{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::809868205509:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:aud": "sts.amazonaws.com","oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"}}}]}" > load-balancer-role-trust-policy.json
+            cat load-balancer-role-trust-policy.json.template | sed "s|OIDC-ID|$oidc_id|g" > load-balancer-role-trust-policy.json
       - run: 
           name: create IAM role 
           command: |
