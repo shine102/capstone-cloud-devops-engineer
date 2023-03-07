@@ -85,7 +85,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            sudo apt-get install -y sed
+            sudo apt-get install -y sed curl
       - run:
           name: create deployment.yaml
           command: |
@@ -107,6 +107,28 @@ jobs:
       - kubernetes/create-or-update-resource:
           resource-file-path: deploy-kubernetes/service.yaml
           show-kubectl-command: true
+      - run:
+          name: create IAM OIDC
+          command: |
+            eksctl utils associate-iam-oidc-provider --cluster << parameters.cluster-name >> --approve --region=ap-southeast-1
+      - run: 
+          name: curl iam-policy.json
+          command: |
+            curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.7/docs/install/iam_policy.json
+      - run:
+          name: create IAM policy
+          command: |
+            aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam-policy.json
+      - run: 
+          name: create IAM role and ServiceAccount
+          command: |
+            eksctl create iamserviceaccount \
+            --cluster=<< parameters.cluster-name >> \
+            --name=aws-load-balancer-controller \
+            --attach-policy-arn=arn:aws:iam:809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
+            --override-existing-serviceaccounts \
+            --region ap-southeast-1 \
+            --approve
       - run: 
           name: download helm
           command: |
@@ -116,6 +138,9 @@ jobs:
       - run:
           name: install aws-load-balancer-controller
           command: |
+            helm repo add eks https://aws.github.io/eks-charts
+            helm repo update
+            kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
             helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
             --set clusterName=<< parameters.cluster-name >> \
             --set serviceAccount.create=false \
