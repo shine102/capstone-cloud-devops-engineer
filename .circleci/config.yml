@@ -110,31 +110,55 @@ jobs:
       - run:
           name: create IAM OIDC
           command: |
+            curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            sudo mv /tmp/eksctl /usr/local/bin
             eksctl utils associate-iam-oidc-provider --cluster << parameters.cluster-name >> --approve --region=ap-southeast-1
       - run: 
-          name: curl iam-policy.json
+          name: create load-balancer-role-trust-policy.json
           command: |
-            curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.7/docs/install/iam_policy.json
-      - run:
-          name: create IAM policy
-          command: |
-            aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam-policy.json
+            export oidc_id=$(aws eks describe-cluster --name << parameters.cluster-name >> --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
+            cat >load-balancer-role-trust-policy.json <<EOF
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Federated": "arn:aws:iam::809868205509:oidc-provider/oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id"
+                        },
+                        "Action": "sts:AssumeRoleWithWebIdentity",
+                        "Condition": {
+                            "StringEquals": {
+                                "oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:aud": "sts.amazonaws.com",
+                                "oidc.eks.ap-southeast-1.amazonaws.com/id/$oidc_id:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+                            }
+                        }
+                    }
+                ]
+            }
+            EOF
       - run: 
-          name: create IAM role and ServiceAccount
+          name: create IAM role 
           command: |
-            eksctl create iamserviceaccount \
-            --cluster=<< parameters.cluster-name >> \
-            --name=aws-load-balancer-controller \
-            --attach-policy-arn=arn:aws:iam:809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
-            --override-existing-serviceaccounts \
-            --region ap-southeast-1 \
-            --approve
+            aws iam create-role \
+            --role-name AmazonEKSLoadBalancerControllerRole \
+            --assume-role-policy-document file://"load-balancer-role-trust-policy.json"
+      - run:
+          name: attach IAM policy
+            command: |
+              aws iam attach-role-policy \
+              --policy-arn arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy \
+              --role-name AmazonEKSLoadBalancerControllerRole
       - run: 
           name: download helm
           command: |
             curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
             chmod 700 get_helm.sh
             ./get_helm.sh
+      - run: 
+          name: create aws-load-balancer-controller service account
+          command: |
+            kubectl apply -f aws-load-balancer-controller-service-account.yaml
       - run:
           name: install aws-load-balancer-controller
           command: |
