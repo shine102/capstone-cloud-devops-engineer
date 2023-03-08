@@ -183,16 +183,14 @@ jobs:
           resource-file-path: deploy-kubernetes/ingress-blue.yaml
           show-kubectl-command: true
       - run:
-          name: get ingress external ip
-          command: |
-            URL=http://$(kubectl get ingress)
-            echo $URL
-      - run:
           name: test external ip
           command: |
-            URL=http://$(kubectl get svc demoapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            URL=http://$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
             echo $URL
-            curl $URL
+            for i in {1..5};
+            do
+              curl $URL
+            done
 
   # switch-version: 
   switch-version:
@@ -208,8 +206,12 @@ jobs:
       - run:
           name: test external ip
           command: |
-            URL=http://$(kubectl get svc demoapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-            curl $URL
+            URL=http://$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            echo $URL
+            for i in {1..5};
+            do
+              curl $URL
+            done
 
   # clean-up:
   clean-up: 
