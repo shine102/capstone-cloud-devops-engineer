@@ -62,7 +62,6 @@ jobs:
           cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
           node-type: t3.medium
           nodes: 1
-          node-security-groups: sg-0a239f1ebd3532241
   
   deploy-application:
     docker:
