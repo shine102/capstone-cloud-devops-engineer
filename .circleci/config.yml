@@ -129,6 +129,7 @@ jobs:
       - run: 
           name: create IAM role 
           command: |
+            aws iam detach-role-policy --role-name AmazonEKSLoadBalancerControllerRole --policy-arn arn:aws:iam::809868205509:policy/AWSLoadBalancerControllerIAMPolicy
             aws iam delete-role --role-name AmazonEKSLoadBalancerControllerRole
             aws iam create-role \
             --role-name AmazonEKSLoadBalancerControllerRole \
