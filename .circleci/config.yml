@@ -60,7 +60,7 @@ jobs:
       - checkout
       - aws-eks/create-cluster:
           cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
-          node-type: t3.small
+          node-type: t3.medium
           nodes: 1
   
   deploy-application:
