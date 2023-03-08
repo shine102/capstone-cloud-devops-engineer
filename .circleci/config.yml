@@ -185,7 +185,8 @@ jobs:
       - run:
           name: test external ip
           command: |
-            URL=http://$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}'
+            export URL=kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}'
             echo $URL
             for i in {1..5};
             do
@@ -206,7 +207,7 @@ jobs:
       - run:
           name: test external ip
           command: |
-            URL=http://$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
+            export URL=kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}'
             echo $URL
             for i in {1..5};
             do
