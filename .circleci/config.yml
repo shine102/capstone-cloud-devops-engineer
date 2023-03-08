@@ -60,7 +60,7 @@ jobs:
       - checkout
       - aws-eks/create-cluster:
           cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
-          node-type: t3.medium
+          node-type: t3.small
           nodes: 1
   
   deploy-application:
@@ -129,6 +129,7 @@ jobs:
       - run: 
           name: create IAM role 
           command: |
+            aws iam delete-role --role-name AmazonEKSLoadBalancerControllerRole
             aws iam create-role \
             --role-name AmazonEKSLoadBalancerControllerRole \
             --assume-role-policy-document file://"load-balancer-role-trust-policy.json"
@@ -171,7 +172,14 @@ jobs:
       - run: 
           name: verify aws-load-balancer-controller installation
           command: |
-            kubectl get deployment aws-load-balancer-controller
+            while true; 
+            do
+              kubectl get deployment aws-load-balancer-controller -o json | jq -r '.status.conditions[] | select(.type=="Available") | .status'
+              if [ $? -eq 2 ]; then
+                break
+              fi
+              sleep 5
+            done
       - kubernetes/create-or-update-resource:
           resource-file-path: deploy-kubernetes/ingress-blue.yaml
           show-kubectl-command: true
