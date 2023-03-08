@@ -171,7 +171,7 @@ jobs:
       - run: 
           name: verify aws-load-balancer-controller installation
           command: |
-            while true; 
+            for i in {1..3};
             do
               kubectl get deployment aws-load-balancer-controller -o json | jq -r '.status.conditions[] | select(.type=="Available") | .status'
               if [ $? -eq 2 ]; then
