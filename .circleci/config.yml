@@ -232,8 +232,17 @@ jobs:
   clean-up: 
     docker:
       - image: 'cimg/python:3.10'
+    parameters:
+      docker-image-ver1:
+        description: |
+          Docker image to build
+        type: string
     steps:
       - checkout
+      - run:
+          name: create deployment.yaml
+          command: |
+            cat deploy-kubernetes/deployment.yaml.template | sed "s|DOCKER_IMAGE|<< parameters.docker-image-ver1 >>|g" > deploy-kubernetes/deployment-ver1.yaml
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: "shine102-${CIRCLE_WORKFLOW_ID:0:7}-EKS"
           install-kubectl: true
@@ -264,6 +273,7 @@ workflows:
               only: master
       - clean-up:
           requires: [switch-version]
+          docker-image-ver1: $DOCKERHUB_USERNAME/$DOCKERHUB_REPO:${CIRCLE_WORKFLOW_ID:0:7}_ver1
           filters:
             branches:
               only: master
