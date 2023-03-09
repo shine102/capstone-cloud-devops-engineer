@@ -185,6 +185,8 @@ jobs:
       - run:
           name: test external ip
           command: |
+            kubectl get all
+            kubectl get ingress -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname' 
             export URL=http://`kubectl get ingress -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'`
             echo $URL
             for i in {1..5};
@@ -206,6 +208,8 @@ jobs:
       - run:
           name: test external ip
           command: |
+            kubectl get all
+            kubectl get ingress -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'
             export URL=http://`kubectl get ingress -o json | jq -r '.items[0].status.loadBalancer.ingress[0].hostname'`
             echo $URL
             for i in {1..5};
